@@ -4,7 +4,7 @@
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 
 from insta_crawler import InstagramSpider
-
+import json
 
 def main():
     print('main')
@@ -13,7 +13,7 @@ def main():
     if login_success:
         # login success, load user detail
         sharedData = scraper.get_shared_data_userinfo("_liin.16")
-        print('shared Data: \n', sharedData)
+        print('shared Data: \n', json.dumps(sharedData))
 
 if __name__ == '__main__':
     main()

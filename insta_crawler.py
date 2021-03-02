@@ -1,3 +1,4 @@
+import re
 import scrapy
 import requests
 import concurrent.futures
@@ -36,9 +37,12 @@ class InstagramSpider(object):
         self.password = ''
         self.owner_id = 0
         self.session = requests.Session()
+        self.rhx_gis = ""
         self.cookies = None
         self.quit = False
         self.logger = None
+        self.authenticated = False
+        self.logged_in = False
         # Set up a logger
         if self.logger is None:
             self.logger = InstagramSpider.get_logger(level=logging.DEBUG, dest=default_attr.get('log_destination'),
@@ -82,14 +86,15 @@ class InstagramSpider(object):
             if self.quit:
                 return
             try:
-                response = self.session.get(timeout=CONNECT_TIMEOUT, cookies=self.cookies, *args, **kwargs)
+                response = self.session.get(args[0], timeout=CONNECT_TIMEOUT, cookies=self.cookies )
                 if response.status_code == 404:
                     return
                 response.raise_for_status()
                 content_length = response.headers.get('Content-Length')
-                if content_length is not None and len(response.content) != int(content_length):
-                    # if content_length is None we repeat anyway to get size and be confident
-                    raise PartialContentException('Partial response')
+                print('data: ', response.text)
+                # if content_length is not None and len(response.content) != int(content_length):
+                #     # if content_length is None we repeat anyway to get size and be confident
+                #     raise PartialContentException('Partial response')
                 return response
             except (KeyboardInterrupt):
                 raise
@@ -115,6 +120,7 @@ class InstagramSpider(object):
 
     def get_json(self, *args, **kwargs):
         """Retrieve text from url. Return text as string or None if no data present """
+        print('get Json: ', args, kwargs)
         resp = self.safe_get(*args, **kwargs)
 
         if resp is not None:
@@ -148,23 +154,49 @@ class InstagramSpider(object):
 
         userinfo = None
 
-        # if resp is not None:
-        #     try:
-        #         if "window._sharedData = " in resp:
-        #             shared_data = resp.split("window._sharedData = ")[1].split(";</script>")[0]
-        #             if shared_data:
-        #                 userinfo = self.deep_get(json.loads(shared_data), 'entry_data.ProfilePage[0].graphql.user')
-        #
-        #         if "window.__additionalDataLoaded(" in resp and not userinfo:
-        #             parameters = resp.split("window.__additionalDataLoaded(")[1].split(");</script>")[0]
-        #             if parameters and "," in parameters:
-        #                 shared_data = parameters.split(",", 1)[1]
-        #                 if shared_data:
-        #                     userinfo = self.deep_get(json.loads(shared_data), 'graphql.user')
-        #     except (TypeError, KeyError, IndexError):
-        #         pass
+        if resp is not None:
+            try:
+                if "window._sharedData = " in resp:
+                    shared_data = resp.split("window._sharedData = ")[1].split(";</script>")[0]
+                    if shared_data:
+                        userinfo = self.deep_get(json.loads(shared_data), 'entry_data.ProfilePage[0].graphql.user')
+
+                if "window.__additionalDataLoaded(" in resp and not userinfo:
+                    parameters = resp.split("window.__additionalDataLoaded(")[1].split(");</script>")[0]
+                    if parameters and "," in parameters:
+                        shared_data = parameters.split(",", 1)[1]
+                        if shared_data:
+                            userinfo = self.deep_get(json.loads(shared_data), 'graphql.user')
+            except (TypeError, KeyError, IndexError):
+                pass
 
         return userinfo
+
+    def deep_get(self, dict, path):
+        def _split_indexes(key):
+            split_array_index = re.compile(r'[.\[\]]+')  # ['foo', '0']
+            return filter(None, split_array_index.split(key))
+
+        ends_with_index = re.compile(r'\[(.*?)\]$')  # foo[0]
+
+        keylist = path.split('.')
+
+        val = dict
+
+        for key in keylist:
+            try:
+                if ends_with_index.search(key):
+                    for prop in _split_indexes(key):
+                        if prop.isdigit():
+                            val = val[int(prop)]
+                        else:
+                            val = val[prop]
+                else:
+                    val = val[key]
+            except (KeyError, IndexError, TypeError):
+                return None
+
+        return val
 
     @staticmethod
     def get_logger(level=logging.DEBUG, dest='', verbose=0):
