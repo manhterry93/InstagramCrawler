@@ -1,3 +1,5 @@
+import json
+
 
 def extract_csrftoken_from_cookies(list_cookies):
     for cookie in list_cookies:
@@ -10,3 +12,8 @@ def extract_csrftoken_from_cookies(list_cookies):
     return None
 
 
+def build_posts_query_variable(user_id, after_token, amount=12):
+    return json.dumps({
+        "id": user_id,
+        "first": amount,
+        "after": after_token})
