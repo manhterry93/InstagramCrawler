@@ -1,7 +1,7 @@
 import scrapy
-from InstagramCrawler.base import constants
+from crawler.InstagramCrawler.base import constants
 import json
-from InstagramCrawler.util import util
+from crawler.InstagramCrawler.util import util
 from scrapy.http import FormRequest
 
 
@@ -28,6 +28,7 @@ class InstagramSpider(scrapy.Spider):
         content = response.body_as_unicode()
         list_cookies = response.headers.getlist('Set-Cookie')
         csrftoken = util.extract_csrftoken_from_cookies(list_cookies)
+        # extract crsftoken
         print('crsftoken: ', csrftoken)
 
         # print('set-cookie: ', list_cookies)
@@ -43,7 +44,7 @@ class InstagramSpider(scrapy.Spider):
             self.header["x-requested-with"] = "XMLHttpRequest"
             yield scrapy.FormRequest(constants.LOGIN_URL, formdata=body, headers=self.header,
                                      callback=self.parse_login, )
-        # extract crsftoken
+
 
     def parse_login(self, response):
         # print('Login response: ', json.dumps(response.headers.to_unicode_dict()))
@@ -64,9 +65,9 @@ class InstagramSpider(scrapy.Spider):
         shared_data = json.loads(response_body.split("window._sharedData = ")[1].split(";</script>")[0])
         posts = shared_data["entry_data"]["ProfilePage"][0]["graphql"]["user"]["edge_owner_to_timeline_media"]
 
-        f = open('shit.txt', "a")
-        f.write(json.dumps(shared_data))
-        f.close()
+        # f = open('shit.txt', "a")
+        # f.write(json.dumps(shared_data))
+        # f.close()
         print('shared text: ', posts)
 
         # paging

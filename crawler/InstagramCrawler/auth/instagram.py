@@ -7,7 +7,7 @@ import sys
 import time
 import logging.config
 
-from InstagramCrawler.base.constants import *
+from crawler.InstagramCrawler.base.constants import *
 
 
 class InstagramSpider(object):

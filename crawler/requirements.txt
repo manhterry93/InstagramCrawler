@@ -1,0 +1,5 @@
+scrapy
+ipython
+flask_sqlalchemy
+flask
+scrapyd
