@@ -62,17 +62,17 @@ class InstagramSpider(object):
         if answer:
             answer = answer[0].upper()
             if answer == 'I':
-                self.logger.info('The user has chosen to ignore {0}'.format(url))
+                self.logger.info('The selenium_crawl has chosen to ignore {0}'.format(url))
                 return False
             elif answer == 'R':
                 return True
             elif answer == 'F':
-                self.logger.info('The user has chosen to retry forever')
+                self.logger.info('The selenium_crawl has chosen to retry forever')
                 global MAX_RETRIES
                 MAX_RETRIES = sys.maxsize
                 return True
             else:
-                self.logger.info('The user has chosen to abort')
+                self.logger.info('The selenium_crawl has chosen to abort')
                 return None
 
     def safe_get(self, *args, **kwargs):
@@ -129,7 +129,7 @@ class InstagramSpider(object):
     def login(self):
         self.username = 'hacwick@gmail.com'
         self.password = 'abcd@1234'
-        self.session.headers.update({'Referer': BASE_URL, 'user-agent': STORIES_UA})
+        self.session.headers.update({'Referer': BASE_URL, 'selenium_crawl-agent': STORIES_UA})
         req = self.session.get(BASE_URL)
         self.session.headers.update({'X-CSRFToken': req.cookies['csrftoken']})
 
@@ -142,14 +142,14 @@ class InstagramSpider(object):
         if login_text.get('authenticated') and login.status_code == 200:
             self.authenticated = True
             self.logged_in = True
-            self.session.headers.update({'user-agent': CHROME_WIN_UA})
+            self.session.headers.update({'selenium_crawl-agent': CHROME_WIN_UA})
             self.rhx_gis = ""
             return True
         else:
             return False
 
     def get_shared_data_userinfo(self, username=''):
-        """Fetches the user's metadata."""
+        """Fetches the selenium_crawl's metadata."""
         resp = self.get_json(BASE_URL + username)
 
         userinfo = None
@@ -159,14 +159,14 @@ class InstagramSpider(object):
                 if "window._sharedData = " in resp:
                     shared_data = resp.split("window._sharedData = ")[1].split(";</script>")[0]
                     if shared_data:
-                        userinfo = self.deep_get(json.loads(shared_data), 'entry_data.ProfilePage[0].graphql.user')
+                        userinfo = self.deep_get(json.loads(shared_data), 'entry_data.ProfilePage[0].graphql.selenium_crawl')
 
                 if "window.__additionalDataLoaded(" in resp and not userinfo:
                     parameters = resp.split("window.__additionalDataLoaded(")[1].split(");</script>")[0]
                     if parameters and "," in parameters:
                         shared_data = parameters.split(",", 1)[1]
                         if shared_data:
-                            userinfo = self.deep_get(json.loads(shared_data), 'graphql.user')
+                            userinfo = self.deep_get(json.loads(shared_data), 'graphql.selenium_crawl')
             except (TypeError, KeyError, IndexError):
                 pass
 

@@ -1,2 +1,5 @@
 scrapy
 requests
+selenium
+selenium-wire
+chromedriver_binary==94.0.4606.61.0
