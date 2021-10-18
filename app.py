@@ -20,5 +20,5 @@ def main():
 
 
 if __name__ == '__main__':
-    instagram_crawler.process_for_cookies(logging, False)
+    instagram_crawler.process_for_cookies(logging, None, False)
     # main()
